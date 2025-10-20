@@ -1,0 +1,26 @@
+rootProject.name = "sm_fitrus_plus"
+
+//// Optional print to confirm which file is used:
+//println "### USING SETTINGS FROM: " + settingsDir
+//
+//pluginManagement {
+//    repositories {
+//        google()
+//        mavenCentral()
+//        gradlePluginPortal()
+//        maven { url = uri("https://jitpack.io") }
+//        maven { url = uri("https://git.onesoftdigm.dev/api/v4/projects/100/packages/maven") }
+//    }
+//}
+//
+//dependencyResolutionManagement {
+//    // You can keep FAIL_ON_PROJECT_REPOS,
+//    // but then you MUST remove all module-level repositories (done above)
+//    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+//    repositories {
+//        google()
+//        mavenCentral()
+//        maven { url = uri("https://jitpack.io") }
+//        maven { url = uri("https://git.onesoftdigm.dev/api/v4/projects/100/packages/maven") }
+//    }
+//}
