@@ -55,7 +55,7 @@ class _MyAppState extends State<MyApp> {
       }
 
       data = "${e.toMap()}";
-
+      print(data);
       setState(() {});
     });
   }

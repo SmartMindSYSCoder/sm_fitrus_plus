@@ -16,6 +16,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 // Data classes to handle structured responses
+// Data classes to handle structured responses
 data class FitrusDataModel(
   val connected: Boolean,
   val error: Boolean,
@@ -23,7 +24,19 @@ data class FitrusDataModel(
   val bodyComposition: BodyComposition? = null,
   val ppgData: Map<String, Any>? = null,
   val temperatureData: Map<String, Any>? = null
-)
+) {
+  // Convert FitrusDataModel to Map for serialization
+  fun toMap(): Map<String, Any?> {
+    return mapOf(
+      "connected" to connected,
+      "error" to error,
+      "message" to message,
+      "bodyComposition" to bodyComposition?.toMap(),
+      "ppgData" to ppgData,
+      "temperatureData" to temperatureData
+    )
+  }
+}
 
 data class BodyComposition(
   val bmi: Double? = null,
@@ -35,7 +48,22 @@ data class BodyComposition(
   val protein: Double? = null,
   val calorie: Double? = null,
   val minerals: Double? = null
-)
+) {
+  // Convert BodyComposition to Map for serialization
+  fun toMap(): Map<String, Any?> {
+    return mapOf(
+      "bmi" to bmi,
+      "bmr" to bmr,
+      "waterPercentage" to waterPercentage,
+      "fatMass" to fatMass,
+      "fatPercentage" to fatPercentage,
+      "muscleMass" to muscleMass,
+      "protein" to protein,
+      "calorie" to calorie,
+      "minerals" to minerals
+    )
+  }
+}
 
 class SmFitrusPlusPlugin :
   FlutterPlugin,
@@ -290,7 +318,7 @@ class SmFitrusPlusPlugin :
       )
     ))
 
-    manager?.disconnectFitrus()
+//    manager?.disconnectFitrus()
 
   }
 
@@ -338,6 +366,6 @@ class SmFitrusPlusPlugin :
   }
 
   private fun sendEvent(data: FitrusDataModel) {
-    eventsSink?.success(data)
+    eventsSink?.success(data.toMap())  // Convert to Map before sending
   }
 }

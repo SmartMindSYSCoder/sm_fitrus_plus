@@ -13,12 +13,15 @@ class FitrusDataModel {
 
   // Factory constructor to create an instance from a Map (for JSON or event data)
   factory FitrusDataModel.fromMap(Map<String, dynamic> map) {
+    // Ensure that the map keys and values are properly cast
     return FitrusDataModel(
       connected: map['connected'] ?? false,
       error: map['error'] ?? false,
       message: map['message'] ?? '',
       bodyComposition: map['bodyComposition'] != null
-          ? BodyComposition.fromMap(map['bodyComposition'])
+          ? BodyComposition.fromMap(
+              Map<String, dynamic>.from(map['bodyComposition']),
+            )
           : null,
     );
   }
