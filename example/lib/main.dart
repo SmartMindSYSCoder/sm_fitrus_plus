@@ -45,49 +45,17 @@ class _MyAppState extends State<MyApp> {
   String data = "";
   listenData() {
     SmFitrusPlus.events.listen((e) async {
-      switch (e['type']) {
-        case 'connection':
-          {
-            data = "$e";
-            // print("****************  $e");
-            // print("**************** status ${e['status']}");
-            if (e['status'] == true) {
-              // print("*******************  connected");
-              await Future.delayed(Duration(seconds: 1));
-
-              SmFitrusPlus.startCompMeasure(
-                gender: 'male',
-                heightCm: 150,
-                weightKg: 55,
-                birth: "1997/12/03",
-              );
-            }
-          }
-
-          break;
-        case 'deviceInfo':
-          final ee = Map<String, String>.from(e['data']);
-          data = "$ee";
-
-          break;
-        case 'batteryInfo':
-          final ee = Map<String, dynamic>.from(e['data']);
-          data = "$ee";
-
-          break;
-        case 'compMeasured':
-        case 'ppgMeasured':
-        case 'tempMeasured':
-          final ee = Map.from(e['data']);
-          data = "$ee";
-
-          break;
-        case 'error':
-          final msg = e['message'];
-          data = "$msg";
-
-          break;
+      if (e.connected && e.bodyComposition == null) {
+        SmFitrusPlus.startCompMeasure(
+          gender: 'male',
+          heightCm: 150,
+          weightKg: 55,
+          birth: "1997/12/03",
+        );
       }
+
+      data = "${e.toMap()}";
+
       setState(() {});
     });
   }

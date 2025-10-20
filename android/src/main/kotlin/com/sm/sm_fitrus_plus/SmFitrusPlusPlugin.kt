@@ -15,6 +15,28 @@ import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
+// Data classes to handle structured responses
+data class FitrusDataModel(
+  val connected: Boolean,
+  val error: Boolean,
+  val message: String,
+  val bodyComposition: BodyComposition? = null,
+  val ppgData: Map<String, Any>? = null,
+  val temperatureData: Map<String, Any>? = null
+)
+
+data class BodyComposition(
+  val bmi: Double? = null,
+  val bmr: Double? = null,
+  val waterPercentage: Double? = null,
+  val fatMass: Double? = null,
+  val fatPercentage: Double? = null,
+  val muscleMass: Double? = null,
+  val protein: Double? = null,
+  val calorie: Double? = null,
+  val minerals: Double? = null
+)
+
 class SmFitrusPlusPlugin :
   FlutterPlugin,
   ActivityAware,
@@ -38,10 +60,9 @@ class SmFitrusPlusPlugin :
   private var activity: Activity? = null
   private var manager: FitrusDevice? = null
 
-
-
   private var lastHeightCm: Double? = null
   private var lastWeightKg: Double? = null
+
   // --- FlutterPlugin ---
   override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
     context = binding.applicationContext
@@ -109,8 +130,6 @@ class SmFitrusPlusPlugin :
           m.startFitrusScan()
           result.success(true)
         } else {
-          // In your sample, you show warning when BT is not available.
-          // Here we just return false to let Dart decide what to do.
           result.success(false)
         }
       }
@@ -161,39 +180,6 @@ class SmFitrusPlusPlugin :
         result.success(null)
       }
 
-      "startHeartRateMeasure" -> {
-        val m = manager ?: return result.error("NOT_INIT", "Call initialize first", null)
-        m.startFitrusHeartRateMeasure()
-        result.success(null)
-      }
-
-      "startBloodPressure" -> {
-        val m = manager ?: return result.error("NOT_INIT", "Call initialize first", null)
-        val baseSys = (call.argument<Double>("baseSystolic") ?: 120.0).toFloat()
-        val baseDia = (call.argument<Double>("baseDiastolic") ?: 80.0).toFloat()
-        m.StartFitrusBloodPressure(baseSys, baseDia)
-        result.success(null)
-      }
-
-      "startStressMeasure" -> {
-        val m = manager ?: return result.error("NOT_INIT", "Call initialize first", null)
-        val birth = call.argument<String>("birth") ?: ""
-        m.startFitrusStressMeasure(birth)
-        result.success(null)
-      }
-
-      "startTempBody" -> {
-        val m = manager ?: return result.error("NOT_INIT", "Call initialize first", null)
-        m.startFitrusTempBodyMeasure()
-        result.success(null)
-      }
-
-      "startTempObject" -> {
-        val m = manager ?: return result.error("NOT_INIT", "Call initialize first", null)
-        m.startFitrusTempObjectMeasure()
-        result.success(null)
-      }
-
       else -> result.notImplemented()
     }
   }
@@ -201,37 +187,55 @@ class SmFitrusPlusPlugin :
   // --- FitrusBleDelegate (callbacks -> stream to Dart) ---
   @UiThread
   override fun handleFitrusConnected() {
-    sendEvent(mapOf("type" to "connection","status" to true))
+    sendEvent(FitrusDataModel(
+      connected = true,
+      error = false,
+      message = "Device connected",
+      bodyComposition = null
+    ))
   }
 
   @UiThread
   override fun handleFitrusDisconnected() {
-    sendEvent(mapOf("type" to "connection","status" to false ))
+    sendEvent(FitrusDataModel(
+      connected = false,
+      error = false,
+      message = "Device disconnected",
+      bodyComposition = null
+    ))
   }
 
   @UiThread
   override fun handleFitrusDeviceInfo(result: Map<String, String>) {
-    sendEvent(mapOf("type" to "deviceInfo", "data" to result))
+    sendEvent(FitrusDataModel(
+      connected = false,
+      error = false,
+      message = "Device Info received",
+      bodyComposition = null
+    ))
   }
 
   @UiThread
   override fun handleFitrusBatteryInfo(result: Map<String, Any>) {
-    sendEvent(mapOf("type" to "batteryInfo", "data" to result))
+    sendEvent(FitrusDataModel(
+      connected = false,
+      error = false,
+      message = "Battery Info received",
+      bodyComposition = null
+    ))
   }
 
   @UiThread
   override fun handleFitrusCompMeasured(result: Map<String, String>) {
-//    sendEvent(mapOf("type" to "compMeasured", "data" to result))
-
-
+    // Helper function to safely extract a string or numerical value
     fun str(key: String): String? = result[key]
     fun num(key: String): Double? = result[key]?.toDoubleOrNull()
 
-//     Round helper (two decimals)
+    // Round helper (two decimals)
     fun round2(value: Double?): Double? =
       value?.let { String.format("%.2f", it).toDouble() }
 
-    // Raw SDK values
+    // Raw SDK values from the result map
     val bfp = num("bfp")              // Body fat percentage
     val bfm = num("bfm")              // Fat mass (kg)
     val bmr = num("bmr")              // Basal metabolic rate
@@ -241,16 +245,17 @@ class SmFitrusPlusPlugin :
     val protein = num("protein")      // Protein
     val mineral = num("mineral")      // Mineral
 
-    val weight = lastWeightKg
-    val heightCm = lastHeightCm
+    val weight = lastWeightKg         // Use the last weight recorded
+    val heightCm = lastHeightCm      // Use the last height recorded
 
-    // Derived
+    // Derived values
     val bmi: Double? = if (weight != null && heightCm != null && heightCm > 0.0) {
       val h = heightCm / 100.0
-      weight / (h * h)
+      weight / (h * h)  // BMI = weight / (height in meters)^2
     } else null
 
     val waterPercentage: Double? = if (weight != null && icw != null && ecw != null && weight > 0.0) {
+      // Water percentage = (ICW + ECW) / weight * 100
       ((icw + ecw) / weight) * 100.0
     } else null
 
@@ -263,43 +268,76 @@ class SmFitrusPlusPlugin :
       "fatPercentage" to round2(bfp),
       "muscleMass" to round2(smm),
       "protein" to round2(protein),
-      "calorie" to round2(bmr),
+      "calorie" to round2(bmr),  // We use the same value for calories as BMR
       "minerals" to round2(mineral)
     )
 
-//    // Include original values (also rounded) under "raw"
-//    val roundedRaw = result.mapValues { (_, v) ->
-//      v.toDoubleOrNull()?.let { String.format("%.2f", it).toDouble() } ?: v
-//    }
-//
-//    enriched["raw"] = roundedRaw
-//
-    sendEvent(mapOf("type" to "compMeasured", "data" to enriched))
+    // Send the enriched data to Dart as part of the event
+    sendEvent(FitrusDataModel(
+      connected = false,
+      error = false,
+      message = "Body composition measured",
+      bodyComposition = BodyComposition(
+        bmi = enriched["bmi"] as? Double,
+        bmr = enriched["bmr"] as? Double,
+        waterPercentage = enriched["waterPercentage"] as? Double,
+        fatMass = enriched["fatMass"] as? Double,
+        fatPercentage = enriched["fatPercentage"] as? Double,
+        muscleMass = enriched["muscleMass"] as? Double,
+        protein = enriched["protein"] as? Double,
+        calorie = enriched["calorie"] as? Double,
+        minerals = enriched["minerals"] as? Double
+      )
+    ))
+
+    manager?.disconnectFitrus()
 
   }
 
+
+  // --- Handle PPG (Heart Rate) Measurement ---
   @UiThread
   override fun handleFitrusPpgMeasured(result: Map<String, Any>) {
-    sendEvent(mapOf("type" to "ppgMeasured", "data" to result))
-  }
+    // PPG data might include things like heart rate, SpO2, etc.
+    val ppgData = result.mapValues { (_, v) -> v.toString() }
 
+    sendEvent(FitrusDataModel(
+      connected = false,
+      error = false,
+      message = "PPG measured",
+      ppgData = ppgData
+    ))
+    manager?.disconnectFitrus()
+
+  }
+  // --- Handle Temperature Measurement ---
   @UiThread
   override fun handleFitrusTempMeasured(result: Map<String, String>) {
-    sendEvent(mapOf("type" to "tempMeasured", "data" to result))
-  }
+    // Handle temperature data (both body and object temperature)
+    val tempData = result.mapValues { (_, v) -> v.toString() }
 
+    sendEvent(FitrusDataModel(
+      connected = true,
+      error = false,
+      message = "Temperature measured",
+      temperatureData = tempData
+    ))
+
+    manager?.disconnectFitrus()
+
+  }
+  // Handle error from the SDK and send it to Dart
   @UiThread
   override fun fitrusDispatchError(error: String) {
-    sendEvent(mapOf("type" to "error", "message" to error))
+    sendEvent(FitrusDataModel(
+      connected = false,
+      error = true,
+      message = "Error: $error",
+      bodyComposition = null
+    ))
   }
 
-  // --- helpers ---
-  @MainThread
-  private fun sendEvent(payload: Map<String, Any?>) {
-    try {
-      eventsSink?.success(payload)
-    } catch (t: Throwable) {
-      Log.e(TAG, "sendEvent failed", t)
-    }
+  private fun sendEvent(data: FitrusDataModel) {
+    eventsSink?.success(data)
   }
 }
