@@ -1,28 +1,34 @@
-# sm_fitrus_plus
-
-# **SmFitrusPlus Flutter Plugin**
+# SmFitrusPlus Flutter Plugin
 
 [![GitHub](https://img.shields.io/github/license/SmartMindSYSCoder/sm_fitrus_plus)](https://github.com/SmartMindSYSCoder/sm_fitrus_plus/blob/main/LICENSE)
 
-This Flutter plugin allows integration with the **Fitrus device SDK** to perform various health-related measurements, including **body composition**, **heart rate**, **blood pressure**, **temperature**, and **stress levels**. It enables communication between Flutter and the native Android SDK for Fitrus devices.
+This Flutter plugin allows integration with the **Fitrus device SDK** to perform various health-related measurements, including **body composition**, **heart rate**, **blood pressure**, **temperature**, and **stress levels**. It enables seamless communication between Flutter and the native Android SDK for Fitrus devices.
 
----
+## Table of Contents
 
-## **Features**
-- **Device Initialization**: Initialize the Fitrus device with an API key.
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Event Streaming](#event-streaming)
+- [API Reference](#api-reference)
+- [Example](#example)
+- [Validation](#validation)
+- [Contributing](#contributing)
+
+## Features
+
+- **Device Initialization**: Initialize the Fitrus device with an API key
 - **Measurement Support**:
-    - Body composition (BMI, fat percentage, muscle mass, etc.)
-    - Heart rate measurement (PPG)
-    - Blood pressure measurement
-    - Stress level measurement
-    - Body and object temperature measurements
-- **Event Handling**: Receive real-time results and events like measurements and errors from the device.
+  - Body composition (BMI, fat percentage, muscle mass, etc.)
+  - Heart rate measurement (PPG)
+  - Blood pressure measurement
+  - Stress level measurement
+  - Body and object temperature measurements
+- **Event Handling**: Receive real-time results and events like measurements and errors from the device
 
----
+## Installation
 
-## **Installation**
-
-To use the `sm_fitrus_plus` plugin in your Flutter project, you need to link to the GitHub repository directly, as it’s not published on `pub.dev`. Add the following to your `pubspec.yaml`:
+Since the `sm_fitrus_plus` plugin is not published on `pub.dev`, you need to link to the GitHub repository directly. Add the following to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
@@ -31,160 +37,175 @@ dependencies:
       url: https://github.com/SmartMindSYSCoder/sm_fitrus_plus.git
 ```
 
+Then, run the following command to fetch the plugin:
 
-Then, run flutter pub get to fetch the plugin.
+```bash
+flutter pub get
+```
 
-Usage
-1. Initialization
+## Usage
 
-To initialize the Fitrus device, you'll need to call the initialize() method with your API key.
+### 1. Initialization
 
+Initialize the Fitrus device with your API key:
+
+```dart
 import 'package:sm_fitrus_plus/sm_fitrus_plus.dart';
 
-// Initialize with the API key
 await SmFitrusPlus.initialize('YOUR_API_KEY');
+```
 
-2. Start Scan
+### 2. Start Scan
 
-To start scanning for nearby Fitrus devices, use the startScan() method.
+Start scanning for nearby Fitrus devices:
 
+```dart
 bool isScanning = await SmFitrusPlus.startScan();
+```
 
-3. Stop Scan
+### 3. Stop Scan
 
-To stop the scan for nearby Fitrus devices, use the stopScan() method.
+Stop the scan for nearby Fitrus devices:
 
-    await SmFitrusPlus.stopScan();
+```dart
+await SmFitrusPlus.stopScan();
+```
 
-4. Disconnect
+### 4. Disconnect
 
-To disconnect from the Fitrus device, use the disconnect() method.
+Disconnect from the Fitrus device:
 
-    await SmFitrusPlus.disconnect();
+```dart
+await SmFitrusPlus.disconnect();
+```
 
-5. Get Device Info
+### 5. Get Device Info
 
-To get information about the connected Fitrus device, use the getDeviceInfo() method.
+Retrieve information about the connected Fitrus device:
 
+```dart
 await SmFitrusPlus.getDeviceInfo();
+```
 
-6. Get Battery Info
+### 6. Get Battery Info
 
-To get battery information from the Fitrus device, use the getBatteryInfo() method.
+Get battery information from the Fitrus device:
 
-    await SmFitrusPlus.getBatteryInfo();
+```dart
+await SmFitrusPlus.getBatteryInfo();
+```
 
-7. Start Body Composition Measurement
+### 7. Start Body Composition Measurement
 
-Start a body composition measurement (BMI, fat percentage, muscle mass, etc.) with the startCompMeasure() method.
+Start a body composition measurement (BMI, fat percentage, muscle mass, etc.):
 
+```dart
 await SmFitrusPlus.startCompMeasure(
   gender: 'male',
   heightCm: 170.0,
   weightKg: 70.0,
   birth: '19900101',
 );
+```
 
-8. Start Heart Rate Measurement
+### 8. Start Heart Rate Measurement
 
-To start a heart rate (PPG) measurement, use the startHeartRateMeasure() method.
+Start a heart rate (PPG) measurement:
 
+```dart
 await SmFitrusPlus.startHeartRateMeasure();
+```
 
-9. Start Blood Pressure Measurement
+### 9. Start Blood Pressure Measurement
 
-To start a blood pressure measurement, use the startBloodPressure() method.
+Start a blood pressure measurement:
 
+```dart
 await SmFitrusPlus.startBloodPressure(
   baseSystolic: 120.0,
   baseDiastolic: 80.0,
 );
+```
 
-10. Start Stress Measure
+### 10. Start Stress Measurement
 
-To start a stress level measurement, use the startStressMeasure() method.
+Start a stress level measurement:
 
+```dart
 await SmFitrusPlus.startStressMeasure('19900101');
+```
 
-11. Start Body Temperature Measurement
+### 11. Start Body Temperature Measurement
 
-To start a body temperature measurement, use the startTempBody() method.
+Start a body temperature measurement:
 
+```dart
 await SmFitrusPlus.startTempBody();
+```
 
-12. Start Object Temperature Measurement
+### 12. Start Object Temperature Measurement
 
-To start an object temperature measurement, use the startTempObject() method.
+Start an object temperature measurement:
 
+```dart
 await SmFitrusPlus.startTempObject();
+```
 
-Event Streaming
+## Event Streaming
 
-The plugin streams measurement results and other events via the events stream. You can listen to the events stream to receive updates from the native Fitrus device.
+The plugin streams measurement results and other events via the `events` stream. Listen to these events to receive real-time updates from the Fitrus device:
 
+```dart
 SmFitrusPlus.events.listen((event) {
-  // Handle the event
   print(event.message);
+  
   if (event.bodyComposition != null) {
     print("BMI: ${event.bodyComposition?.bmi}");
   }
 });
+```
 
-Event Types
+### Event Types
 
-Device Connection Events: Information on whether the device is connected or disconnected.
+- **Device Connection Events**: Information about device connection or disconnection status
+- **Measurement Results**: Results from measurements such as body composition, heart rate, temperature, and more
+- **Errors**: Any errors encountered during communication with the device
 
-Measurement Results: Contains results of measurements such as body composition, heart rate, and more.
+## API Reference
 
-Errors: Any errors encountered while communicating with the device.
+### Methods
 
-API Reference
-Methods
+| Method | Description |
+|--------|-------------|
+| `initialize(String apiKey)` | Initializes the Fitrus device with the provided API key |
+| `startScan()` | Starts scanning for Fitrus devices |
+| `stopScan()` | Stops the scan for Fitrus devices |
+| `disconnect()` | Disconnects from the Fitrus device |
+| `getDeviceInfo()` | Retrieves device information |
+| `getBatteryInfo()` | Retrieves battery information |
+| `startCompMeasure()` | Starts a body composition measurement |
+| `startHeartRateMeasure()` | Starts a heart rate (PPG) measurement |
+| `startBloodPressure()` | Starts a blood pressure measurement |
+| `startStressMeasure(String birth)` | Starts a stress level measurement |
+| `startTempBody()` | Starts a body temperature measurement |
+| `startTempObject()` | Starts an object temperature measurement |
 
-initialize(String apiKey): Initializes the Fitrus device with the provided API key.
+### Event Model (FitrusDataModel)
 
-startScan(): Starts scanning for Fitrus devices.
+The `FitrusDataModel` contains the following fields:
 
-stopScan(): Stops the scan for Fitrus devices.
+- **connected** (`bool`): Indicates if the device is connected
+- **error** (`bool`): Indicates if there was an error
+- **message** (`String`): A message with information about the event
+- **bodyComposition** (`BodyComposition?`): Optional object containing body composition measurement results (BMI, fat percentage, etc.)
+- **ppgData** (`Map?`): Optional map of PPG data (e.g., heart rate)
+- **temperatureData** (`Map?`): Optional map of temperature data (body or object temperature)
 
-disconnect(): Disconnects from the Fitrus device.
+## Example
 
-getDeviceInfo(): Retrieves device information.
+Here's a complete example of how to use the SmFitrusPlus plugin in a Flutter application:
 
-getBatteryInfo(): Retrieves battery information.
-
-startCompMeasure(): Starts a body composition measurement (BMI, fat percentage, etc.).
-
-startHeartRateMeasure(): Starts a heart rate (PPG) measurement.
-
-startBloodPressure(): Starts a blood pressure measurement.
-
-startStressMeasure(String birth): Starts a stress level measurement.
-
-startTempBody(): Starts a body temperature measurement.
-
-startTempObject(): Starts an object temperature measurement.
-
-Event Model (FitrusDataModel)
-
-The FitrusDataModel contains the following fields:
-
-connected: A bool indicating if the device is connected.
-
-error: A bool indicating if there was an error.
-
-message: A String message with information about the event.
-
-bodyComposition: An optional BodyComposition object containing the results of a body composition measurement (BMI, fat percentage, etc.).
-
-ppgData: Optional map of PPG data (e.g., heart rate).
-
-temperatureData: Optional map of temperature data (body or object temperature).
-
-Example
-
-Here’s a full example of how to use the SmFitrusPlus plugin in a Flutter application:
-
+```dart
 import 'package:flutter/material.dart';
 import 'package:sm_fitrus_plus/sm_fitrus_plus.dart';
 
@@ -236,20 +257,21 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+```
 
-Validation
+## Validation
 
-When starting body composition measurements, the plugin validates the input values for height, weight, gender, and birth date. The _validateCompInputs function ensures:
+When starting body composition measurements, the plugin validates the input values. The `_validateCompInputs` function ensures:
 
-Height is between 50 and 250 cm
+- **Height**: Between 50 and 250 cm
+- **Weight**: Between 10 and 300 kg
+- **Gender**: Either `'male'` or `'female'`
+- **Birth date**: In the format `yyyy/MM/dd` and ensures the user is at least 5 years old
 
-Weight is between 10 and 300 kg
+## Contributing
 
-Gender is either 'male' or 'female'
+Contributions are welcome! If you find any bugs or have ideas for improvements, please feel free to create a pull request. We appreciate your help in making this plugin better.
 
-Birth date is in the format yyyy/MM/dd and ensures the user is at least 5 years old
+---
 
-Contributing
-
-If you find any bugs or want to improve the plugin, feel free to create a pull request! All contributions are welcome.
-
+**License**: This project is licensed under the [LICENSE](https://github.com/SmartMindSYSCoder/sm_fitrus_plus/blob/main/LICENSE) - see the LICENSE file for details.
