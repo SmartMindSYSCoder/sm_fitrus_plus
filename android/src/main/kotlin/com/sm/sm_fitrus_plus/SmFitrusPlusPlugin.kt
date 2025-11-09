@@ -3,8 +3,8 @@ package com.sm.sm_fitrus_plus
 import android.app.Activity
 import android.content.Context
 import android.util.Log
-import java.util.Locale
-
+import java.math.BigDecimal
+import java.math.RoundingMode
 import androidx.annotation.MainThread
 import androidx.annotation.UiThread
 import com.onesoftdigm.fitrus.device.sdk.FitrusBleDelegate
@@ -264,8 +264,12 @@ class SmFitrusPlusPlugin :
     // Round helper (two decimals)
 //    fun round2(value: Double?): Double? =
 //      value?.let { String.format("%.2f", it).toDouble() }
-    fun round2(value: Double?): String? {
-      return value?.let { String.format(Locale.US, "%.2f", it) }
+    fun round2(value: Double?): Double? {
+      return value?.let {
+        BigDecimal.valueOf(it)
+          .setScale(2, RoundingMode.HALF_UP)
+          .toDouble()
+      }
     }
     // Raw SDK values from the result map
     val bfp = num("bfp")              // Body fat percentage
